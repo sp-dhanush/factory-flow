@@ -3,7 +3,6 @@ import { useApp } from '../context/AppContext';
 import { formatINR } from '../utils/helpers';
 import { exportCSVData } from '../utils/csvExporter';
 import { exportOrdersPDF } from '../utils/pdfExporter';
-import { Edit2, Trash2, Download, FileText, FileSpreadsheet, ChevronDown } from 'lucide-react';
 
 export const Orders = () => {
   const { orders, factories, customers, setActiveModal, setModalPayload, deleteOrderDoc, setLightboxImg } = useApp();
@@ -69,136 +68,116 @@ export const Orders = () => {
 
   return (
     <section id="tab-orders" className="tab-content active">
-      <div className="section-header">
-        <div className="section-title">Order Costing & Margin Master</div>
-        <button className="btn btn-primary" onClick={() => { setModalPayload(null); setActiveModal('order'); }}>+ New Box Order</button>
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <div className="fs-5 fw-bold font-outfit">Order Costing & Margin Master</div>
+        <button className="btn btn-primary d-flex align-items-center gap-1 rounded-3 px-3 py-2 shadow-sm" onClick={() => { setModalPayload(null); setActiveModal('order'); }}>
+          <i className="bi bi-plus-lg"></i>
+          <span>New Box Order</span>
+        </button>
       </div>
 
-      <div className="filters-bar" style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
-        <input 
-          type="text" 
-          placeholder="Search order #, customer, factory, notes..." 
-          value={search} 
-          onChange={(e) => setSearch(e.target.value)} 
-          style={{ flex: '1 1 200px' }}
-        />
-        <select value={monthFilter} onChange={(e) => setMonthFilter(e.target.value)}>
-          <option value="">All Months</option>
-          {availableMonths.map(m => (
-            <option key={m} value={m}>{formatMonthLabel(m)}</option>
-          ))}
-        </select>
-        <select value={factoryFilter} onChange={(e) => setFactoryFilter(e.target.value)}>
-          <option value="">All Factories</option>
-          {factories.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
-        </select>
-        <select value={customerFilter} onChange={(e) => setCustomerFilter(e.target.value)}>
-          <option value="">All Customers</option>
-          {customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-        </select>
-        <select value={marginStatusFilter} onChange={(e) => setMarginStatusFilter(e.target.value)}>
-          <option value="">All Margin Statuses</option>
-          <option value="pending">🔴 Margin Pending</option>
-          <option value="partial">🟡 Partial Commission</option>
-          <option value="received">🟢 Commission Received</option>
-        </select>
-        <select value={paymentModeFilter} onChange={(e) => setPaymentModeFilter(e.target.value)}>
-          <option value="">All Payment Modes</option>
-          <option value="bank_transfer">Bank Transfer</option>
-          <option value="upi">UPI</option>
-          <option value="cheque">Cheque</option>
-          <option value="cash">Cash</option>
-        </select>
+      {/* Bootstrap Filters Bar */}
+      <div className="row g-2 mb-3 align-items-center">
+        <div className="col-12 col-md-3">
+          <div className="input-group">
+            <span className="input-group-text bg-body-tertiary border-secondary border-opacity-25">
+              <i className="bi bi-search"></i>
+            </span>
+            <input 
+              type="text" 
+              className="form-control" 
+              placeholder="Search order #, customer, factory..." 
+              value={search} 
+              onChange={(e) => setSearch(e.target.value)} 
+            />
+          </div>
+        </div>
+        <div className="col-6 col-md">
+          <select className="form-select" value={monthFilter} onChange={(e) => setMonthFilter(e.target.value)}>
+            <option value="">All Months</option>
+            {availableMonths.map(m => (
+              <option key={m} value={m}>{formatMonthLabel(m)}</option>
+            ))}
+          </select>
+        </div>
+        <div className="col-6 col-md">
+          <select className="form-select" value={factoryFilter} onChange={(e) => setFactoryFilter(e.target.value)}>
+            <option value="">All Factories</option>
+            {factories.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+          </select>
+        </div>
+        <div className="col-6 col-md">
+          <select className="form-select" value={customerFilter} onChange={(e) => setCustomerFilter(e.target.value)}>
+            <option value="">All Customers</option>
+            {customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+        </div>
+        <div className="col-6 col-md">
+          <select className="form-select" value={marginStatusFilter} onChange={(e) => setMarginStatusFilter(e.target.value)}>
+            <option value="">All Margin Statuses</option>
+            <option value="pending">Margin Pending</option>
+            <option value="partial">Partial Commission</option>
+            <option value="received">Commission Received</option>
+          </select>
+        </div>
+        <div className="col-6 col-md">
+          <select className="form-select" value={paymentModeFilter} onChange={(e) => setPaymentModeFilter(e.target.value)}>
+            <option value="">All Payment Modes</option>
+            <option value="bank_transfer">Bank Transfer</option>
+            <option value="upi">UPI</option>
+            <option value="cheque">Cheque</option>
+            <option value="cash">Cash</option>
+          </select>
+        </div>
 
-        {/* Export Dropdown Button Next to Filters */}
-        <div ref={dropdownRef} style={{ position: 'relative', display: 'inline-block' }}>
-          <button 
-            className="btn btn-secondary" 
-            onClick={() => setExportOpen(!exportOpen)}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}
-          >
-            <Download size={15} />
-            Export
-            <ChevronDown size={14} style={{ transform: exportOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
-          </button>
-
-          {exportOpen && (
-            <div 
-              style={{
-                position: 'absolute',
-                right: 0,
-                top: 'calc(100% + 6px)',
-                backgroundColor: 'var(--card-bg, #1e293b)',
-                border: '1px solid var(--border, #334155)',
-                borderRadius: '8px',
-                boxShadow: '0 10px 25px rgba(0,0,0,0.3)',
-                zIndex: 100,
-                minWidth: '170px',
-                padding: '4px 0',
-                overflow: 'hidden'
-              }}
+        {/* Export Dropdown */}
+        <div className="col-auto" ref={dropdownRef}>
+          <div className="dropdown">
+            <button 
+              className="btn btn-outline-secondary dropdown-toggle d-flex align-items-center gap-1" 
+              type="button"
+              onClick={() => setExportOpen(!exportOpen)}
             >
-              <button
-                type="button"
-                onClick={() => {
-                  exportOrdersPDF(filtered, monthFilter ? formatMonthLabel(monthFilter) : '');
-                  setExportOpen(false);
-                }}
-                style={{
-                  width: '100%',
-                  textAlign: 'left',
-                  padding: '9px 14px',
-                  background: 'none',
-                  border: 'none',
-                  color: 'var(--text-main, #f8fafc)',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  fontSize: '0.85rem',
-                  fontWeight: 500
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--hover-bg, rgba(255,255,255,0.08))'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'none'}
-              >
-                <FileText size={15} color="#ef4444" />
-                Export as PDF
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  exportCSVData(filtered);
-                  setExportOpen(false);
-                }}
-                style={{
-                  width: '100%',
-                  textAlign: 'left',
-                  padding: '9px 14px',
-                  background: 'none',
-                  border: 'none',
-                  color: 'var(--text-main, #f8fafc)',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  fontSize: '0.85rem',
-                  fontWeight: 500
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--hover-bg, rgba(255,255,255,0.08))'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'none'}
-              >
-                <FileSpreadsheet size={15} color="#10b981" />
-                Export as Excel (CSV)
-              </button>
-            </div>
-          )}
+              <i className="bi bi-download"></i>
+              <span>Export</span>
+            </button>
+
+            {exportOpen && (
+              <ul className="dropdown-menu dropdown-menu-end show shadow-sm border-0 mt-1">
+                <li>
+                  <button
+                    className="dropdown-item d-flex align-items-center gap-2 py-2"
+                    onClick={() => {
+                      exportOrdersPDF(filtered, monthFilter ? formatMonthLabel(monthFilter) : '');
+                      setExportOpen(false);
+                    }}
+                  >
+                    <i className="bi bi-file-earmark-pdf-fill text-danger fs-6"></i>
+                    <span>Export as PDF</span>
+                  </button>
+                </li>
+                <li>
+                  <button
+                    className="dropdown-item d-flex align-items-center gap-2 py-2"
+                    onClick={() => {
+                      exportCSVData(filtered);
+                      setExportOpen(false);
+                    }}
+                  >
+                    <i className="bi bi-file-earmark-excel-fill text-success fs-6"></i>
+                    <span>Export as Excel (CSV)</span>
+                  </button>
+                </li>
+              </ul>
+            )}
+          </div>
         </div>
       </div>
 
-      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+      <div className="card border-0 shadow-sm rounded-3 overflow-hidden">
         <div className="table-responsive">
-          <table className="data-table">
-            <thead>
+          <table className="table table-hover align-middle mb-0">
+            <thead className="table-dark">
               <tr>
                 <th>Order #</th>
                 <th>Date</th>
@@ -218,7 +197,7 @@ export const Orders = () => {
             <tbody>
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan="13" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-dim)' }}>
+                  <td colSpan="13" className="text-center py-4 text-muted">
                     No matching orders found.
                   </td>
                 </tr>
@@ -236,65 +215,78 @@ export const Orders = () => {
                       <td>{o.orderDate}</td>
                       <td>{o.customerName}</td>
                       <td>{o.factoryName}</td>
-                      <td style={{ fontSize: '0.8rem', color: 'var(--text-muted)', maxWidth: 180 }}>{specStr}</td>
+                      <td className="small text-muted" style={{ maxWidth: 180 }}>{specStr}</td>
                       <td className="tabular-nums">{o.quantity.toLocaleString('en-IN')}</td>
                       <td className="tabular-nums"><strong>{formatINR(o.totalCustomerBill)}</strong></td>
-                      <td className="tabular-nums" style={{ color: 'var(--success)' }}><strong>{formatINR(o.profitMargin)}</strong></td>
+                      <td className="tabular-nums text-success"><strong>{formatINR(o.profitMargin)}</strong></td>
                       
                       {/* Margin Payout Status */}
                       <td>
                         {marginStatus === 'received' && (
-                          <span className="status-badge badge-success" title={`Commission margin fully received: ₹${(o.profitMargin || 0).toLocaleString('en-IN')}`}>🟢 Received</span>
+                          <span className="badge bg-success rounded-pill d-inline-flex align-items-center gap-1">
+                            <i className="bi bi-check-circle-fill"></i> Received
+                          </span>
                         )}
                         {marginStatus === 'partial' && (
-                          <span className="status-badge badge-warning" title={`Received ₹${receivedAmount.toLocaleString('en-IN')} out of ₹${(o.profitMargin || 0).toLocaleString('en-IN')}`}>
-                            🟡 Partial (₹{receivedAmount.toLocaleString('en-IN')})
+                          <span className="badge bg-warning text-dark rounded-pill d-inline-flex align-items-center gap-1">
+                            <i className="bi bi-dash-circle-fill"></i> Partial (₹{receivedAmount.toLocaleString('en-IN')})
                           </span>
                         )}
                         {marginStatus === 'pending' && (
-                          <span className="status-badge badge-danger" title="Margin payment pending from factory">🔴 Pending</span>
+                          <span className="badge bg-danger rounded-pill d-inline-flex align-items-center gap-1">
+                            <i className="bi bi-clock-fill"></i> Pending
+                          </span>
                         )}
                       </td>
 
                       {/* Customer -> Factory Status */}
                       <td>
                         {(customerStatus === 'paid_to_factory' || customerStatus === 'paid') && (
-                          <span className="status-badge badge-success">🟢 Paid to Factory</span>
+                          <span className="badge bg-success rounded-pill d-inline-flex align-items-center gap-1">
+                            <i className="bi bi-check-circle-fill"></i> Paid to Factory
+                          </span>
                         )}
                         {customerStatus === 'partial' && (
-                          <span className="status-badge badge-warning">🟡 Partial</span>
+                          <span className="badge bg-warning text-dark rounded-pill d-inline-flex align-items-center gap-1">
+                            <i className="bi bi-dash-circle-fill"></i> Partial
+                          </span>
                         )}
                         {customerStatus === 'pending' && (
-                          <span className="status-badge badge-danger">🔴 Pending</span>
+                          <span className="badge bg-danger rounded-pill d-inline-flex align-items-center gap-1">
+                            <i className="bi bi-clock-fill"></i> Pending
+                          </span>
                         )}
                       </td>
 
                       {/* Payment Details */}
-                      <td style={{ fontSize: '0.78rem' }}>
-                        <div><strong>{getModeLabel(o.paymentMode)}</strong></div>
-                        {o.paymentDate && <div style={{ color: 'var(--text-muted)' }}>📅 {o.paymentDate}</div>}
-                        {o.paymentNotes && <div style={{ color: 'var(--text-muted)', fontStyle: 'italic', maxWidth: 150, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={o.paymentNotes}>📝 {o.paymentNotes}</div>}
+                      <td className="small">
+                        <div className="fw-bold">{getModeLabel(o.paymentMode)}</div>
+                        {o.paymentDate && <div className="text-muted"><i className="bi bi-calendar3 me-1"></i>{o.paymentDate}</div>}
+                        {o.paymentNotes && <div className="text-muted text-truncate" style={{ maxWidth: 140 }} title={o.paymentNotes}><i className="bi bi-card-text me-1"></i>{o.paymentNotes}</div>}
                       </td>
 
                       <td>
                         {photoCount > 0 ? (
-                          <button className="btn btn-secondary btn-sm" onClick={() => setLightboxImg(o.photos[0].url)}>🖼️ {photoCount}</button>
+                          <button className="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1" onClick={() => setLightboxImg(o.photos[0].url)}>
+                            <i className="bi bi-image"></i>
+                            <span>{photoCount}</span>
+                          </button>
                         ) : (
-                          <span style={{ color: 'var(--text-dim)', fontSize: '0.75rem' }}>None</span>
+                          <span className="text-muted small">None</span>
                         )}
                       </td>
 
                       <td>
-                        <div style={{ display: 'flex', gap: '4px' }}>
+                        <div className="btn-group btn-group-sm">
                           <button 
-                            className="btn btn-secondary btn-sm" 
+                            className="btn btn-outline-secondary" 
                             onClick={() => { setModalPayload(o); setActiveModal('order'); }}
                             title="Edit Order & Payment Status"
                           >
-                            <Edit2 size={13} /> Edit
+                            <i className="bi bi-pencil-square"></i>
                           </button>
-                          <button className="btn btn-danger btn-sm" onClick={() => deleteOrderDoc(o.id)}>
-                            <Trash2 size={13} />
+                          <button className="btn btn-outline-danger" onClick={() => deleteOrderDoc(o.id)}>
+                            <i className="bi bi-trash-fill"></i>
                           </button>
                         </div>
                       </td>

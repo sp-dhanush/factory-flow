@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { generateBoxDescription, formatINR } from '../../utils/helpers';
-import { Upload } from 'lucide-react';
 
 export const OrderModal = () => {
   const { customers, factories, products, orders, saveOrderDoc, setActiveModal, modalPayload } = useApp();
@@ -329,20 +328,20 @@ export const OrderModal = () => {
 
             {/* Payment & Settlement Details */}
             <div style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px dashed var(--border)' }}>
-              <div style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: '0.75rem', color: 'var(--primary)' }}>💰 Payment & Commission Settlement</div>
+              <div style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: '0.75rem', color: 'var(--primary)' }}><i className="bi bi-wallet2"></i> Payment & Commission Settlement</div>
 
               <div className="form-grid">
                 <div className="form-group">
                   <label>My Margin Payout Status</label>
                   <select value={marginPaymentStatus} onChange={e => handleMarginStatusChange(e.target.value)}>
-                    <option value="pending">🔴 Pending (Factory hasn't paid me)</option>
-                    <option value="partial">🟡 Partially Received</option>
-                    <option value="received">🟢 Commission Received</option>
+                    <option value="pending">Margin Pending</option>
+                    <option value="partial">Partial Commission Settled</option>
+                    <option value="received">Commission Fully Received</option>
                   </select>
                 </div>
 
                 <div className="form-group">
-                  <label>Margin Amount Received / Paid (₹)</label>
+                  <label>Commission Amount Received (₹)</label>
                   <input 
                     type="number" 
                     step="0.01" 
@@ -356,12 +355,12 @@ export const OrderModal = () => {
               {/* Helper text showing remaining pending balance */}
               <div style={{ marginTop: '0.5rem', marginBottom: '0.75rem', fontSize: '0.8rem' }}>
                 {remainingMarginBalance > 0 ? (
-                  <span style={{ color: 'var(--warning)', fontWeight: 600 }}>
-                    🟡 Remaining Pending Margin Balance: ₹{remainingMarginBalance.toFixed(2)} (Out of ₹{profitMargin.toFixed(2)})
+                  <span style={{ color: 'var(--warning)', fontWeight: 600 }} className="d-flex align-items-center gap-1">
+                    <i className="bi bi-dash-circle-fill text-warning"></i> Remaining Pending Margin Balance: ₹{remainingMarginBalance.toFixed(2)} (Out of ₹{profitMargin.toFixed(2)})
                   </span>
                 ) : (
-                  <span style={{ color: 'var(--success)', fontWeight: 600 }}>
-                    🟢 Commission Margin Fully Settled! (₹{profitMargin.toFixed(2)})
+                  <span style={{ color: 'var(--success)', fontWeight: 600 }} className="d-flex align-items-center gap-1">
+                    <i className="bi bi-check-circle-fill text-success"></i> Commission Margin Fully Settled! (₹{profitMargin.toFixed(2)})
                   </span>
                 )}
               </div>
@@ -370,9 +369,9 @@ export const OrderModal = () => {
                 <div className="form-group">
                   <label>Customer → Factory Status</label>
                   <select value={customerPaymentStatus} onChange={e => setCustomerPaymentStatus(e.target.value)}>
-                    <option value="pending">🔴 Pending</option>
-                    <option value="partial">🟡 Partially Paid</option>
-                    <option value="paid_to_factory">🟢 Paid to Factory Directly</option>
+                    <option value="pending">Pending</option>
+                    <option value="partial">Partially Paid</option>
+                    <option value="paid_to_factory">Paid to Factory Directly</option>
                   </select>
                 </div>
 
@@ -407,7 +406,7 @@ export const OrderModal = () => {
             <div className="form-group" style={{ marginTop: '1rem' }}>
               <label>Reference Photos (Customer / Factory Samples)</label>
               <label className="dropzone">
-                <Upload size={28} color="var(--text-muted)" />
+                <i className="bi bi-cloud-arrow-up-fill fs-3 text-secondary"></i>
                 <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>Click to upload reference photos</div>
                 <input type="file" multiple accept="image/*" onChange={handlePhotoSelect} style={{ display: 'none' }} />
               </label>

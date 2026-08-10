@@ -1,4 +1,5 @@
 module.exports = {
+  ignorePatterns: ['dist', 'node_modules', '*.min.js'],
   env: {
     browser: true,
     es2020: true,

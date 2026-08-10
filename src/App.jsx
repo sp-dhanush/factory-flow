@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useApp } from './context/AppContext';
 import { Navbar } from './components/Navbar';
 import { Dashboard } from './components/Dashboard';
@@ -16,48 +16,38 @@ import { CollectionModal } from './components/modals/CollectionModal';
 import { LightboxModal } from './components/modals/LightboxModal';
 import { FirebaseModal } from './components/modals/FirebaseModal';
 
-import { KeyRound, ShieldCheck, Box } from 'lucide-react';
-
 export const App = () => {
-  const { activeTab, activeModal, syncNotice, setSyncNotice, user, loginWithGoogle, setActiveModal } = useApp();
+  const { activeTab, activeModal, syncNotice, setSyncNotice, user, loginWithGoogle, setActiveModal, theme } = useApp();
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-bs-theme', theme === 'dark' ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-theme', theme === 'dark' ? 'dark' : 'light');
+  }, [theme]);
 
   return (
     <>
       <Navbar />
 
-      <main className="container">
+      <main className="container-fluid px-3 px-md-4 py-3 flex-grow-1">
         {syncNotice && (
-          <div style={{
-            background: 'rgba(239, 68, 68, 0.15)',
-            border: '1px solid #ef4444',
-            borderRadius: '8px',
-            padding: '0.75rem 1rem',
-            marginBottom: '1.5rem',
-            display: 'flex',
-            justify: 'space-between',
-            alignItems: 'center',
-            color: '#f8fafc',
-            fontSize: '0.85rem'
-          }}>
-            <span>⚠️ {syncNotice}</span>
-            <button
-              onClick={() => setSyncNotice(null)}
-              style={{ background: 'none', border: 'none', color: '#f8fafc', cursor: 'pointer', fontWeight: 'bold' }}
-            >
-              &times;
-            </button>
+          <div className="alert alert-danger alert-dismissible fade show d-flex align-items-center justify-content-between mb-4 shadow-sm" role="alert">
+            <div className="d-flex align-items-center gap-2">
+              <i className="bi bi-exclamation-triangle-fill fs-5"></i>
+              <span>{syncNotice}</span>
+            </div>
+            <button type="button" className="btn-close" onClick={() => setSyncNotice(null)} aria-label="Close"></button>
           </div>
         )}
         {!user ? (
-          <div className="auth-hero-section">
+          <div className="auth-hero-section py-4">
             <div className="auth-ambient-glow"></div>
 
             <div className="auth-hero-grid">
               {/* Left Side: Feature Pills Stack */}
               <div className="auth-feature-list">
                 <div className="auth-feature-pill">
-                  <div className="auth-pill-icon" style={{ background: 'rgba(99, 102, 241, 0.2)', color: 'var(--primary)' }}>
-                    📦
+                  <div className="auth-pill-icon" style={{ background: 'linear-gradient(135deg, #6366f1, #4f46e5)' }}>
+                    <i className="bi bi-box-seam-fill text-white fs-5"></i>
                   </div>
                   <div>
                     <div style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-main)' }}>Box Specs Catalog</div>
@@ -66,8 +56,8 @@ export const App = () => {
                 </div>
 
                 <div className="auth-feature-pill">
-                  <div className="auth-pill-icon" style={{ background: 'rgba(16, 185, 129, 0.2)', color: 'var(--success)' }}>
-                    💰
+                  <div className="auth-pill-icon" style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}>
+                    <i className="bi bi-currency-rupee text-white fs-4"></i>
                   </div>
                   <div>
                     <div style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-main)' }}>Profit Margin Ledger</div>
@@ -76,8 +66,8 @@ export const App = () => {
                 </div>
 
                 <div className="auth-feature-pill">
-                  <div className="auth-pill-icon" style={{ background: 'rgba(6, 182, 212, 0.2)', color: 'var(--info)' }}>
-                    📈
+                  <div className="auth-pill-icon" style={{ background: 'linear-gradient(135deg, #06b6d4, #0891b2)' }}>
+                    <i className="bi bi-building-gear text-white fs-5"></i>
                   </div>
                   <div>
                     <div style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-main)' }}>Factory Balance Sheets</div>
@@ -86,18 +76,18 @@ export const App = () => {
                 </div>
 
                 <div className="auth-feature-pill">
-                  <div className="auth-pill-icon" style={{ background: 'rgba(245, 158, 11, 0.2)', color: 'var(--warning)' }}>
-                    💬
+                  <div className="auth-pill-icon" style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}>
+                    <i className="bi bi-file-earmark-pdf-fill text-white fs-5"></i>
                   </div>
                   <div>
-                    <div style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-main)' }}>WhatsApp PDF Reports</div>
-                    <div style={{ fontSize: '0.78rem', color: 'var(--text-dim)' }}>1-click monthly factory statement PDFs</div>
+                    <div style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-main)' }}>PDF & Excel Reports</div>
+                    <div style={{ fontSize: '0.78rem', color: 'var(--text-dim)' }}>1-click downloadable factory statement PDFs & CSVs</div>
                   </div>
                 </div>
               </div>
 
               {/* Right Side: Sleek Glassmorphic Login Card */}
-              <div className="auth-card">
+              <div className="auth-card shadow-lg border-0">
                 <div style={{
                   width: '64px',
                   height: '64px',
@@ -109,14 +99,14 @@ export const App = () => {
                   marginBottom: '1.25rem',
                   boxShadow: '0 10px 25px rgba(168, 85, 247, 0.35)'
                 }}>
-                  <Box size={32} color="#ffffff" />
+                  <i className="bi bi-box-seam-fill text-white fs-2"></i>
                 </div>
 
-                <h1 style={{ fontSize: '2.1rem', fontWeight: 800, fontFamily: "'Outfit', sans-serif", letterSpacing: '-0.02em', marginBottom: '0.5rem', color: '#ffffff' }}>
+                <h1 className="fw-bold font-outfit text-white mb-1" style={{ fontSize: '2.1rem' }}>
                   FACTORY FLOW
                 </h1>
 
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: '2rem', fontWeight: 500 }}>
+                <p className="text-muted mb-4 fw-medium" style={{ fontSize: '0.95rem' }}>
                   Log in to your Brokerage Dashboard
                 </p>
 
@@ -135,38 +125,17 @@ export const App = () => {
                   </button>
 
                   <button
-                    className="btn btn-secondary"
+                    className="btn btn-secondary rounded-3 border-0 py-2 text-white-50"
                     onClick={() => setActiveModal('firebase')}
-                    style={{
-                      padding: '0.75rem 1.25rem',
-                      fontSize: '0.85rem',
-                      borderRadius: '12px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '8px',
-                      cursor: 'pointer',
-                      background: 'rgba(255,255,255,0.05)',
-                      borderColor: 'rgba(255,255,255,0.1)'
-                    }}
+                    style={{ background: 'rgba(255,255,255,0.05)' }}
                   >
-                    <KeyRound size={16} />
+                    <i className="bi bi-gear-fill me-2"></i>
                     Configure BYOF Firebase Credentials
                   </button>
                 </div>
 
-                <div style={{
-                  marginTop: '2.25rem',
-                  paddingTop: '1.25rem',
-                  borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
-                  fontSize: '0.78rem',
-                  color: 'var(--text-dim)'
-                }}>
-                  <ShieldCheck size={16} color="var(--success)" />
+                <div className="mt-4 pt-3 border-top border-secondary border-opacity-25 d-flex align-items-center justify-content-center gap-2 text-muted" style={{ fontSize: '0.78rem' }}>
+                  <i className="bi bi-shield-check text-success fs-6"></i>
                   <span>Encrypted Row-Level User Isolation (`users/&#123;uid&#125;/...`)</span>
                 </div>
               </div>

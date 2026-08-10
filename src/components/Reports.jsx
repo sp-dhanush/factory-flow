@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { exportPDFStatement } from '../utils/pdfExporter';
 import { formatINR } from '../utils/helpers';
-import { Download } from 'lucide-react';
 
 export const Reports = () => {
   const { factories, orders, transactions } = useApp();
@@ -30,25 +29,25 @@ export const Reports = () => {
 
   return (
     <section id="tab-reports" className="tab-content active">
-      <div className="section-header">
-        <div className="section-title">Monthly Factory Statement & PDF Generator</div>
-        <button className="btn btn-success" onClick={handleDownloadPDF}>
-          <Download size={16} />
-          Download PDF Statement
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <div className="fs-5 fw-bold font-outfit">Monthly Factory Statement & PDF Generator</div>
+        <button className="btn btn-success d-flex align-items-center gap-2 rounded-3 px-3 py-2 shadow-sm" onClick={handleDownloadPDF}>
+          <i className="bi bi-file-earmark-pdf-fill fs-5"></i>
+          <span>Download PDF Statement</span>
         </button>
       </div>
 
-      <div className="card">
-        <div className="form-grid" style={{ alignItems: 'flex-end' }}>
-          <div className="form-group">
-            <label>Select Factory</label>
-            <select value={selectedFactoryId} onChange={(e) => setSelectedFactoryId(e.target.value)}>
+      <div className="card border-0 shadow-sm rounded-3 p-3 mb-4 bg-body-tertiary">
+        <div className="row g-3 align-items-end">
+          <div className="col-12 col-md-6">
+            <label className="form-label text-uppercase small fw-bold text-muted">Select Factory</label>
+            <select className="form-select" value={selectedFactoryId} onChange={(e) => setSelectedFactoryId(e.target.value)}>
               {factories.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
             </select>
           </div>
-          <div className="form-group">
-            <label>Select Month & Year</label>
-            <input type="month" value={monthStr} onChange={(e) => setMonthStr(e.target.value)} />
+          <div className="col-12 col-md-6">
+            <label className="form-label text-uppercase small fw-bold text-muted">Select Month & Year</label>
+            <input type="month" className="form-control" value={monthStr} onChange={(e) => setMonthStr(e.target.value)} />
           </div>
         </div>
       </div>
