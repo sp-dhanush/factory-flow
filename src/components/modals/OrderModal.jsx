@@ -68,15 +68,53 @@ export const OrderModal = () => {
     }
   };
 
-  const handlePhotoSelect = (e) => {
-    const files = Array.from(e.target.files);
-    files.forEach(file => {
+  const compressImageFile = (file) => {
+    return new Promise((resolve) => {
       const reader = new FileReader();
       reader.onload = (evt) => {
-        setPhotos(prev => [...prev, { name: file.name, url: evt.target.result }]);
+        const img = new Image();
+        img.onload = () => {
+          const maxDim = 800;
+          let width = img.width;
+          let height = img.height;
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+          resolve(compressedDataUrl);
+        };
+        img.onerror = () => resolve(evt.target.result);
+        img.src = evt.target.result;
       };
       reader.readAsDataURL(file);
     });
+  };
+
+  const handlePhotoSelect = async (e) => {
+    const files = Array.from(e.target.files);
+    if (photos.length + files.length > 5) {
+      alert('Maximum 5 reference photos allowed per order to optimize storage.');
+    }
+    const eligible = files.slice(0, 5 - photos.length);
+    for (const file of eligible) {
+      try {
+        const compressedUrl = await compressImageFile(file);
+        setPhotos(prev => [...prev, { name: file.name, url: compressedUrl }]);
+      } catch (err) {
+        console.error('Error compressing image:', err);
+      }
+    }
   };
 
   const numQty = parseInt(quantity) || 0;

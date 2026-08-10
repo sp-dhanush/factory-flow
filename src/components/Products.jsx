@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { generateBoxDescription } from '../utils/helpers';
-import { Edit2, Trash2 } from 'lucide-react';
 
 export const Products = () => {
   const { products, customers, setActiveModal, setModalPayload, deleteProductDoc } = useApp();

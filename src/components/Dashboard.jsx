@@ -1,22 +1,18 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
 import { formatINR } from '../utils/helpers';
-import { DollarSign, Activity, FileSpreadsheet, Package, Plus, Layers } from 'lucide-react';
+import { DollarSign, Activity, Package, Layers } from 'lucide-react';
 
 export const Dashboard = () => {
-  const { orders, factories, customers, transactions, setActiveModal, setLightboxImg, setModalPayload } = useApp();
+  const { orders, setActiveModal, setLightboxImg, setModalPayload } = useApp();
 
   let totalProfit = 0;
   let totalReceivedMargin = 0;
-  let totalFactoryCost = 0;
-  let totalCustomerBill = 0;
   let totalBoxes = 0;
 
   orders.forEach(o => {
     const profit = (o.profitMargin || 0);
     totalProfit += profit;
-    totalFactoryCost += (o.totalFactoryCost || 0);
-    totalCustomerBill += (o.totalCustomerBill || 0);
     totalBoxes += (o.quantity || 0);
 
     const mStatus = o.marginPaymentStatus || o.factoryPaymentStatus || 'pending';
@@ -27,14 +23,6 @@ export const Dashboard = () => {
   });
 
   const pendingMarginReceivables = Math.max(0, totalProfit - totalReceivedMargin);
-
-  let totalPayouts = 0;
-  let totalCollections = 0;
-  transactions.forEach(t => {
-    if (t.type === 'factory_payout') totalPayouts += (t.amount || 0);
-    if (t.type === 'customer_collection') totalCollections += (t.amount || 0);
-  });
-
   const recentOrders = orders.slice(-5).reverse();
 
   return (

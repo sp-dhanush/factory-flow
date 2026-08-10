@@ -3,7 +3,7 @@ import { useApp } from '../context/AppContext';
 import { formatINR } from '../utils/helpers';
 import { exportCSVData } from '../utils/csvExporter';
 import { exportOrdersPDF } from '../utils/pdfExporter';
-import { Search, Plus, Edit2, Trash2, Download, FileText, FileSpreadsheet, ChevronDown, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
+import { Edit2, Trash2, Download, FileText, FileSpreadsheet, ChevronDown } from 'lucide-react';
 
 export const Orders = () => {
   const { orders, factories, customers, setActiveModal, setModalPayload, deleteOrderDoc, setLightboxImg } = useApp();

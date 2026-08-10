@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
-import { getSavedFirebaseConfig, saveFirebaseConfig, clearFirebaseConfig } from '../../firebase-config';
+import { getUserSavedFirebaseConfig, saveFirebaseConfig, clearFirebaseConfig } from '../../firebase-config';
 
 export const FirebaseModal = () => {
-  const { setActiveModal, loadDemoMode, reloadFirebase } = useApp();
+  const { setActiveModal } = useApp();
   const [apiKey, setApiKey] = useState('');
   const [authDomain, setAuthDomain] = useState('');
   const [projectId, setProjectId] = useState('');
@@ -12,7 +12,7 @@ export const FirebaseModal = () => {
   const [appId, setAppId] = useState('');
 
   useEffect(() => {
-    const cfg = getSavedFirebaseConfig();
+    const cfg = getUserSavedFirebaseConfig();
     if (cfg) {
       setApiKey(cfg.apiKey || '');
       setAuthDomain(cfg.authDomain || '');
@@ -26,7 +26,7 @@ export const FirebaseModal = () => {
   const handleSave = (e) => {
     e.preventDefault();
     if (!apiKey || !projectId) {
-      alert('Please enter valid API Key and Project ID.');
+      alert('Please enter a valid API Key and Project ID.');
       return;
     }
 
@@ -56,32 +56,32 @@ export const FirebaseModal = () => {
         </div>
         <div className="modal-body">
           <div style={{ background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.3)', padding: '0.85rem', borderRadius: 8, fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-            Factory Flow is 100% serverless. Your data & photos stay inside your personal free Firebase project. Follow <strong style={{ color: '#fff' }}>FIREBASE_SETUP.md</strong> to copy your keys.
+            Factory Flow is 100% serverless. To connect your personal Firebase project, paste your credentials below. Follow <strong style={{ color: '#fff' }}>FIREBASE_SETUP.md</strong> for instructions.
           </div>
           <form onSubmit={handleSave}>
             <div className="form-group">
               <label>API Key (apiKey)</label>
-              <input type="text" value={apiKey} onChange={e => setApiKey(e.target.value)} placeholder="AIzaSy..." />
+              <input type="text" value={apiKey} onChange={e => setApiKey(e.target.value)} placeholder="e.g. AIzaSyYOUR_CUSTOM_FIREBASE_API_KEY" />
             </div>
             <div className="form-group">
               <label>Auth Domain (authDomain)</label>
-              <input type="text" value={authDomain} onChange={e => setAuthDomain(e.target.value)} placeholder="myproject.firebaseapp.com" />
+              <input type="text" value={authDomain} onChange={e => setAuthDomain(e.target.value)} placeholder="e.g. your-custom-app.firebaseapp.com" />
             </div>
             <div className="form-group">
               <label>Project ID (projectId)</label>
-              <input type="text" value={projectId} onChange={e => setProjectId(e.target.value)} placeholder="myproject-1234" />
+              <input type="text" value={projectId} onChange={e => setProjectId(e.target.value)} placeholder="e.g. your-custom-project-id" />
             </div>
             <div className="form-group">
               <label>Storage Bucket (storageBucket)</label>
-              <input type="text" value={storageBucket} onChange={e => setStorageBucket(e.target.value)} placeholder="myproject.appspot.com" />
+              <input type="text" value={storageBucket} onChange={e => setStorageBucket(e.target.value)} placeholder="e.g. your-custom-app.firebasestorage.app" />
             </div>
             <div className="form-group">
               <label>Messaging Sender ID (messagingSenderId)</label>
-              <input type="text" value={messagingSenderId} onChange={e => setMessagingSenderId(e.target.value)} placeholder="123456789" />
+              <input type="text" value={messagingSenderId} onChange={e => setMessagingSenderId(e.target.value)} placeholder="e.g. 123456789012" />
             </div>
             <div className="form-group">
               <label>App ID (appId)</label>
-              <input type="text" value={appId} onChange={e => setAppId(e.target.value)} placeholder="1:123456789:web:abcdef" />
+              <input type="text" value={appId} onChange={e => setAppId(e.target.value)} placeholder="e.g. 1:123456789012:web:abcdef123456" />
             </div>
           </form>
         </div>

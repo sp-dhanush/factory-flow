@@ -1,4 +1,4 @@
-export const getSavedFirebaseConfig = () => {
+export const getUserSavedFirebaseConfig = () => {
   const saved = localStorage.getItem('factory_flow_firebase_config');
   if (saved) {
     try {
@@ -7,6 +7,12 @@ export const getSavedFirebaseConfig = () => {
       console.error(e);
     }
   }
+  return null;
+};
+
+export const getSavedFirebaseConfig = () => {
+  const userSaved = getUserSavedFirebaseConfig();
+  if (userSaved) return userSaved;
   return {
     apiKey: import.meta.env.VITE_FIREBASE_API_KEY || '',
     authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || '',

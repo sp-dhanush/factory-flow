@@ -6,14 +6,6 @@ import { getSavedFirebaseConfig } from '../firebase-config';
 
 const AppContext = createContext();
 
-const DEFAULT_DEMO_DATA = {
-  factories: [],
-  customers: [],
-  products: [],
-  orders: [],
-  transactions: []
-};
-
 export const AppProvider = ({ children }) => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const getThemeCookie = () => {
@@ -49,11 +41,20 @@ export const AppProvider = ({ children }) => {
   const [modalPayload, setModalPayload] = useState(null);
   const [lightboxImg, setLightboxImg] = useState(null);
 
+  const unsubscribersRef = React.useRef([]);
+
+  const detachListeners = () => {
+    unsubscribersRef.current.forEach(unsub => typeof unsub === 'function' && unsub());
+    unsubscribersRef.current = [];
+  };
+
   useEffect(() => {
     initFirebase();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const initFirebase = () => {
+    detachListeners();
     const config = getSavedFirebaseConfig();
     if (config.apiKey && config.projectId) {
       try {
@@ -68,9 +69,18 @@ export const AppProvider = ({ children }) => {
 
         onAuthStateChanged(firebaseAuth, (currentUser) => {
           setUser(currentUser);
+          detachListeners();
+          if (currentUser) {
+            loadFirestore(firebaseDb, currentUser.uid);
+          } else {
+            setFactories([]);
+            setCustomers([]);
+            setProducts([]);
+            setOrders([]);
+            setTransactions([]);
+          }
         });
 
-        loadFirestore(firebaseDb);
         return;
       } catch (e) {
         console.warn('Firebase init failed, switching to demo mode', e);
@@ -80,6 +90,7 @@ export const AppProvider = ({ children }) => {
   };
 
   const loadDemoMode = () => {
+    detachListeners();
     setIsDemoMode(true);
     setIsConnected(false);
     const local = localStorage.getItem('factory_flow_demo_data');
@@ -101,7 +112,9 @@ export const AppProvider = ({ children }) => {
         setOrders(parsed.orders || []);
         setTransactions(parsed.transactions || []);
         return;
-      } catch (e) {}
+      } catch (e) {
+        console.warn('Local demo data error', e);
+      }
     }
     setFactories([]);
     setCustomers([]);
@@ -110,31 +123,39 @@ export const AppProvider = ({ children }) => {
     setTransactions([]);
   };
 
-  const loadFirestore = (firestoreDb) => {
+  const [syncNotice, setSyncNotice] = useState(null);
+
+  const loadFirestore = (firestoreDb, userId) => {
+    if (!userId) return;
+    detachListeners();
+
     const errHandler = (err) => {
       console.warn('Firestore snapshot error', err);
+      setSyncNotice('Cloud sync issue detected. Operating in local demo mode.');
       loadDemoMode();
     };
 
-    onSnapshot(collection(firestoreDb, 'factories'), snap => {
-      setFactories(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    const unsubFact = onSnapshot(collection(firestoreDb, 'users', userId, 'factories'), snap => {
+      setFactories(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     }, errHandler);
 
-    onSnapshot(collection(firestoreDb, 'customers'), snap => {
-      setCustomers(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    const unsubCust = onSnapshot(collection(firestoreDb, 'users', userId, 'customers'), snap => {
+      setCustomers(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     }, errHandler);
 
-    onSnapshot(collection(firestoreDb, 'products'), snap => {
-      setProducts(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    const unsubProd = onSnapshot(collection(firestoreDb, 'users', userId, 'products'), snap => {
+      setProducts(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     }, errHandler);
 
-    onSnapshot(collection(firestoreDb, 'orders'), snap => {
-      setOrders(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    const unsubOrd = onSnapshot(collection(firestoreDb, 'users', userId, 'orders'), snap => {
+      setOrders(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     }, errHandler);
 
-    onSnapshot(collection(firestoreDb, 'transactions'), snap => {
-      setTransactions(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    const unsubTx = onSnapshot(collection(firestoreDb, 'users', userId, 'transactions'), snap => {
+      setTransactions(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     }, errHandler);
+
+    unsubscribersRef.current = [unsubFact, unsubCust, unsubProd, unsubOrd, unsubTx];
   };
 
   const loginWithGoogle = async () => {
@@ -151,6 +172,13 @@ export const AppProvider = ({ children }) => {
   };
 
   const logout = async () => {
+    detachListeners();
+    setUser(null);
+    setFactories([]);
+    setCustomers([]);
+    setProducts([]);
+    setOrders([]);
+    setTransactions([]);
     if (auth) {
       await signOut(auth);
     }
@@ -172,16 +200,16 @@ export const AppProvider = ({ children }) => {
     const cleanData = sanitizeForFirestore(ordData);
     if (targetId) {
       delete cleanData.id;
-      if (!isDemoMode && db) {
-        await updateDoc(doc(db, 'orders', targetId), cleanData);
+      if (!isDemoMode && db && user) {
+        await updateDoc(doc(db, 'users', user.uid, 'orders', targetId), cleanData);
       } else {
         const updated = orders.map(o => o.id === targetId ? { ...o, ...cleanData, id: targetId } : o);
         setOrders(updated);
         saveLocalDemoState({ orders: updated });
       }
     } else {
-      if (!isDemoMode && db) {
-        await addDoc(collection(db, 'orders'), cleanData);
+      if (!isDemoMode && db && user) {
+        await addDoc(collection(db, 'users', user.uid, 'orders'), cleanData);
       } else {
         const newOrd = { ...cleanData, id: 'o_' + Date.now() };
         const updated = [newOrd, ...orders];
@@ -193,8 +221,8 @@ export const AppProvider = ({ children }) => {
 
   const deleteOrderDoc = async (id) => {
     if (confirm('Delete this order?')) {
-      if (!isDemoMode && db) {
-        await deleteDoc(doc(db, 'orders', id));
+      if (!isDemoMode && db && user) {
+        await deleteDoc(doc(db, 'users', user.uid, 'orders', id));
       } else {
         const updated = orders.filter(o => o.id !== id);
         setOrders(updated);
@@ -206,16 +234,16 @@ export const AppProvider = ({ children }) => {
   const saveProductDoc = async (id, item) => {
     const cleanItem = sanitizeForFirestore(item);
     if (id) {
-      if (!isDemoMode && db) {
-        await updateDoc(doc(db, 'products', id), cleanItem);
+      if (!isDemoMode && db && user) {
+        await updateDoc(doc(db, 'users', user.uid, 'products', id), cleanItem);
       } else {
         const updated = products.map(p => p.id === id ? { ...p, ...cleanItem } : p);
         setProducts(updated);
         saveLocalDemoState({ products: updated });
       }
     } else {
-      if (!isDemoMode && db) {
-        await addDoc(collection(db, 'products'), cleanItem);
+      if (!isDemoMode && db && user) {
+        await addDoc(collection(db, 'users', user.uid, 'products'), cleanItem);
       } else {
         const updated = [{ ...cleanItem, id: 'p_' + Date.now() }, ...products];
         setProducts(updated);
@@ -227,8 +255,8 @@ export const AppProvider = ({ children }) => {
   const deleteProductDoc = async (id) => {
     const p = products.find(i => i.id === id);
     if (confirm(`Delete product spec "${p ? p.productName : ''}"?`)) {
-      if (!isDemoMode && db) {
-        await deleteDoc(doc(db, 'products', id));
+      if (!isDemoMode && db && user) {
+        await deleteDoc(doc(db, 'users', user.uid, 'products', id));
       } else {
         const updated = products.filter(i => i.id !== id);
         setProducts(updated);
@@ -241,8 +269,8 @@ export const AppProvider = ({ children }) => {
     const cleanItem = sanitizeForFirestore(item);
     const coll = type === 'factory' ? 'factories' : 'customers';
     if (id) {
-      if (!isDemoMode && db) {
-        await updateDoc(doc(db, coll, id), cleanItem);
+      if (!isDemoMode && db && user) {
+        await updateDoc(doc(db, 'users', user.uid, coll, id), cleanItem);
       } else {
         if (type === 'factory') {
           const updated = factories.map(f => f.id === id ? { ...f, ...cleanItem } : f);
@@ -255,8 +283,8 @@ export const AppProvider = ({ children }) => {
         }
       }
     } else {
-      if (!isDemoMode && db) {
-        await addDoc(collection(db, coll), cleanItem);
+      if (!isDemoMode && db && user) {
+        await addDoc(collection(db, 'users', user.uid, coll), cleanItem);
       } else {
         if (type === 'factory') {
           const updated = [{ ...cleanItem, id: 'f_' + Date.now() }, ...factories];
@@ -275,8 +303,8 @@ export const AppProvider = ({ children }) => {
     const list = type === 'factory' ? factories : customers;
     const item = list.find(i => i.id === id);
     if (confirm(`Delete ${type} "${item ? item.name : ''}"?`)) {
-      if (!isDemoMode && db) {
-        await deleteDoc(doc(db, type === 'factory' ? 'factories' : 'customers', id));
+      if (!isDemoMode && db && user) {
+        await deleteDoc(doc(db, 'users', user.uid, type === 'factory' ? 'factories' : 'customers', id));
       } else {
         if (type === 'factory') {
           const updated = factories.filter(f => f.id !== id);
@@ -293,8 +321,8 @@ export const AppProvider = ({ children }) => {
 
   const saveTransactionDoc = async (item) => {
     const cleanItem = sanitizeForFirestore(item);
-    if (!isDemoMode && db) {
-      await addDoc(collection(db, 'transactions'), cleanItem);
+    if (!isDemoMode && db && user) {
+      await addDoc(collection(db, 'users', user.uid, 'transactions'), cleanItem);
     } else {
       const updated = [{ ...cleanItem, id: 't_' + Date.now() }, ...transactions];
       setTransactions(updated);
@@ -312,7 +340,7 @@ export const AppProvider = ({ children }) => {
       activeTab, setActiveTab,
       theme, toggleTheme,
       isDemoMode, setIsDemoMode,
-      isConnected,
+      isConnected, syncNotice, setSyncNotice,
       user, loginWithGoogle, logout,
       factories, customers, products, orders, transactions,
       activeModal, setActiveModal,
@@ -322,7 +350,7 @@ export const AppProvider = ({ children }) => {
       saveProductDoc, deleteProductDoc,
       saveEntityDoc, deleteEntityDoc,
       saveTransactionDoc,
-      reloadFirebase: initApp => initFirebase()
+      reloadFirebase: () => initFirebase()
     }}>
       {children}
     </AppContext.Provider>
