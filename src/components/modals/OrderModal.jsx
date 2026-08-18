@@ -64,6 +64,15 @@ export const OrderModal = () => {
       setUnit(p.unit || 'mm');
       setPly(p.ply || '3-ply');
       setGsmBf(p.gsmBf || '');
+      if (p.factoryRate !== undefined || p.factoryRatePerBox !== undefined) {
+        setFactoryRate(p.factoryRate !== undefined ? p.factoryRate : p.factoryRatePerBox);
+      }
+      if (p.extraMargin !== undefined || p.extraMarginPerBox !== undefined) {
+        setMargin(p.extraMargin !== undefined ? p.extraMargin : p.extraMarginPerBox);
+      }
+      if (p.photos && p.photos.length > 0) {
+        setPhotos(p.photos);
+      }
     }
   };
 

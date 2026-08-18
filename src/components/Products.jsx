@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { generateBoxDescription } from '../utils/helpers';
+import { generateBoxDescription, formatINR } from '../utils/helpers';
 
 export const Products = () => {
-  const { products, customers, setActiveModal, setModalPayload, deleteProductDoc } = useApp();
+  const { products, customers, setActiveModal, setModalPayload, deleteProductDoc, setLightboxImg } = useApp();
   const [search, setSearch] = useState('');
   const [customerFilter, setCustomerFilter] = useState('');
 
   const filtered = products.filter(p => {
     const matchSearch = p.productName.toLowerCase().includes(search.toLowerCase()) || 
                         (p.customerName || '').toLowerCase().includes(search.toLowerCase()) || 
-                        (p.description || '').toLowerCase().includes(search.toLowerCase());
+                        (p.description || '').toLowerCase().includes(search.toLowerCase()) ||
+                        (p.notes || p.note || '').toLowerCase().includes(search.toLowerCase());
     const matchCust = !customerFilter || p.customerId === customerFilter;
     return matchSearch && matchCust;
   });
@@ -34,7 +35,7 @@ export const Products = () => {
             <input 
               type="text" 
               className="form-control" 
-              placeholder="Search product name, customer, specs..." 
+              placeholder="Search product name, customer, notes, specs..." 
               value={search} 
               onChange={(e) => setSearch(e.target.value)} 
             />
@@ -58,20 +59,29 @@ export const Products = () => {
                 <th>Dimensions (L×W×H)</th>
                 <th>Ply</th>
                 <th>GSM / BF</th>
-                <th>Auto-Generated Product Description</th>
+                <th>Factory Rate / Box (₹)</th>
+                <th>My Extra Margin / Box (₹)</th>
+                <th>Notes</th>
+                <th>Reference Photos</th>
+                <th>Auto-Generated Specification</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="text-center py-4 text-muted">
+                  <td colSpan="11" className="text-center py-4 text-muted">
                     No product specifications found. Click "+ Add Product Specification" to create one.
                   </td>
                 </tr>
               ) : (
                 filtered.map(p => {
                   const autoDesc = p.description || generateBoxDescription(p);
+                  const fRate = p.factoryRate !== undefined ? p.factoryRate : p.factoryRatePerBox;
+                  const eMargin = p.extraMargin !== undefined ? p.extraMargin : p.extraMarginPerBox;
+                  const itemNotes = p.notes || p.note;
+                  const photoList = p.photos || p.referencePhotos || [];
+
                   return (
                     <tr key={p.id}>
                       <td><strong>{p.customerName || '-'}</strong></td>
@@ -79,6 +89,20 @@ export const Products = () => {
                       <td className="tabular-nums">{p.length}×{p.width}×{p.height} {p.unit}</td>
                       <td><span className="badge bg-info text-dark rounded-pill">{p.ply}</span></td>
                       <td>{p.gsmBf || '-'}</td>
+                      <td className="tabular-nums">{fRate ? formatINR(fRate) : '-'}</td>
+                      <td className="tabular-nums text-success fw-bold">{eMargin ? formatINR(eMargin) : '-'}</td>
+                      <td style={{ fontSize: '0.8rem', color: 'var(--bs-secondary-color)', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={itemNotes || ''}>
+                        {itemNotes || '-'}
+                      </td>
+                      <td>
+                        {photoList.length > 0 ? (
+                          <button className="btn btn-sm btn-outline-secondary" onClick={() => setLightboxImg(photoList[0].url)} style={{ padding: '0.2rem 0.45rem', fontSize: '0.75rem' }}>
+                            🖼️ {photoList.length}
+                          </button>
+                        ) : (
+                          <span className="text-muted small">None</span>
+                        )}
+                      </td>
                       <td className="small text-muted fw-medium">{autoDesc}</td>
                       <td>
                         <div className="btn-group btn-group-sm">
